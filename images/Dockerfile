@@ -50,7 +50,17 @@ RUN add-apt-repository ppa:git-core/ppa \
     && apt install -y git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -L https://aka.ms/InstallAzureCli | bash
+RUN curl -sLS https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor | \
+    tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+
+RUN AZ_DIST=$(lsb_release -cs) \
+    && echo "deb [arch=${TARGETARCH}] https://packages.microsoft.com/repos/azure-cli/ ${AZ_DIST} main" | \
+    tee /etc/apt/sources.list.d/azure-cli.list
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends azure-cli \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN adduser --disabled-password --gecos "" --uid 1001 runner \
     && groupadd docker --gid 123 \
